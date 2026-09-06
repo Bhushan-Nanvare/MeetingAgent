@@ -1,0 +1,452 @@
+[
+    {
+        "id": "MEET-101",
+        "title": "Fix login authentication bug",
+        "description": "Users are unable to log in using correct credentials. JWT token validation is failing on the server side.",
+        "status": "done",
+        "assignee": "Alice",
+        "priority": "high",
+        "created_at": "2024-01-15"
+    },
+    {
+        "id": "MEET-102",
+        "title": "Add unit tests for payment module",
+        "description": "Payment processing functions lack test coverage. Need to add unit tests for all edge cases.",
+        "status": "done",
+        "assignee": "Bob",
+        "priority": "high",
+        "created_at": "2024-01-16"
+    },
+    {
+        "id": "MEET-103",
+        "title": "Set up CI/CD pipeline",
+        "description": "Configure GitHub Actions for automated testing and deployment to staging environment.",
+        "status": "done",
+        "assignee": "Carol",
+        "priority": "high",
+        "created_at": "2024-01-17"
+    },
+    {
+        "id": "MEET-104",
+        "title": "Migrate database to PostgreSQL",
+        "description": "Current MySQL setup has performance issues. Migrate all tables and data to PostgreSQL.",
+        "status": "in-progress",
+        "assignee": "Dave",
+        "priority": "high",
+        "created_at": "2024-01-18"
+    },
+    {
+        "id": "MEET-105",
+        "title": "Fix CORS policy on API endpoints",
+        "description": "Frontend is getting CORS errors when calling the REST API from different origins.",
+        "status": "done",
+        "assignee": "Eve",
+        "priority": "medium",
+        "created_at": "2024-01-19"
+    },
+    {
+        "id": "MEET-106",
+        "title": "Add password reset functionality",
+        "description": "Users cannot reset forgotten passwords. Need email-based password reset flow.",
+        "status": "open",
+        "assignee": "Alice",
+        "priority": "high",
+        "created_at": "2024-01-20"
+    },
+    {
+        "id": "MEET-107",
+        "title": "Optimise slow database queries",
+        "description": "Several API endpoints are timing out due to unoptimised SQL queries missing indexes.",
+        "status": "in-progress",
+        "assignee": "Bob",
+        "priority": "high",
+        "created_at": "2024-01-21"
+    },
+    {
+        "id": "MEET-108",
+        "title": "Write API documentation",
+        "description": "REST API endpoints are undocumented. Add OpenAPI/Swagger docs for all routes.",
+        "status": "open",
+        "assignee": "Carol",
+        "priority": "medium",
+        "created_at": "2024-01-22"
+    },
+    {
+        "id": "MEET-109",
+        "title": "Fix session timeout bug",
+        "description": "User sessions expire too early even when the user is actively using the app.",
+        "status": "done",
+        "assignee": "Dave",
+        "priority": "medium",
+        "created_at": "2024-01-23"
+    },
+    {
+        "id": "MEET-110",
+        "title": "Add rate limiting to API",
+        "description": "API endpoints have no rate limiting. Need to add per-IP and per-user request throttling.",
+        "status": "open",
+        "assignee": "Eve",
+        "priority": "medium",
+        "created_at": "2024-01-24"
+    },
+    {
+        "id": "MEET-111",
+        "title": "Implement user role management",
+        "description": "Application lacks role-based access control. Need admin, editor, and viewer roles.",
+        "status": "in-progress",
+        "assignee": "Alice",
+        "priority": "high",
+        "created_at": "2024-01-25"
+    },
+    {
+        "id": "MEET-112",
+        "title": "Fix memory leak in background worker",
+        "description": "Background job processor is consuming increasing memory over time and needs investigation.",
+        "status": "open",
+        "assignee": "Bob",
+        "priority": "high",
+        "created_at": "2024-01-26"
+    },
+    {
+        "id": "MEET-113",
+        "title": "Add integration tests for auth flow",
+        "description": "Authentication flow has no integration tests. Cover login, logout, and token refresh.",
+        "status": "open",
+        "assignee": "Carol",
+        "priority": "medium",
+        "created_at": "2024-01-27"
+    },
+    {
+        "id": "MEET-114",
+        "title": "Set up monitoring and alerting",
+        "description": "No monitoring in place for production. Set up Prometheus metrics and PagerDuty alerts.",
+        "status": "open",
+        "assignee": "Dave",
+        "priority": "high",
+        "created_at": "2024-01-28"
+    },
+    {
+        "id": "MEET-115",
+        "title": "Refactor user registration flow",
+        "description": "Registration code is duplicated across multiple files. Consolidate into a single service.",
+        "status": "done",
+        "assignee": "Eve",
+        "priority": "low",
+        "created_at": "2024-01-29"
+    },
+    {
+        "id": "MEET-116",
+        "title": "Add input sanitisation to forms",
+        "description": "User input forms are vulnerable to XSS attacks. Add proper sanitisation and validation.",
+        "status": "open",
+        "assignee": "Alice",
+        "priority": "high",
+        "created_at": "2024-02-01"
+    },
+    {
+        "id": "MEET-117",
+        "title": "Upgrade outdated dependencies",
+        "description": "Several npm and pip packages have known security vulnerabilities and need upgrading.",
+        "status": "in-progress",
+        "assignee": "Bob",
+        "priority": "medium",
+        "created_at": "2024-02-02"
+    },
+    {
+        "id": "MEET-118",
+        "title": "Add lazy loading to frontend",
+        "description": "All components load at startup causing slow initial page load. Implement code splitting.",
+        "status": "open",
+        "assignee": "Carol",
+        "priority": "medium",
+        "created_at": "2024-02-03"
+    },
+    {
+        "id": "MEET-119",
+        "title": "Fix Docker container startup order",
+        "description": "Services start in wrong order causing connection errors on fresh docker-compose up.",
+        "status": "done",
+        "assignee": "Dave",
+        "priority": "medium",
+        "created_at": "2024-02-04"
+    },
+    {
+        "id": "MEET-120",
+        "title": "Add search functionality",
+        "description": "Users cannot search through records. Implement full-text search using PostgreSQL.",
+        "status": "open",
+        "assignee": "Eve",
+        "priority": "medium",
+        "created_at": "2024-02-05"
+    },
+    {
+        "id": "MEET-121",
+        "title": "Write deployment documentation",
+        "description": "No documentation exists for deploying the application to production. Create runbook.",
+        "status": "open",
+        "assignee": "Alice",
+        "priority": "low",
+        "created_at": "2024-02-06"
+    },
+    {
+        "id": "MEET-122",
+        "title": "Fix broken email notifications",
+        "description": "Transactional emails are not being sent. SMTP configuration appears misconfigured.",
+        "status": "done",
+        "assignee": "Bob",
+        "priority": "high",
+        "created_at": "2024-02-07"
+    },
+    {
+        "id": "MEET-123",
+        "title": "Add export to CSV feature",
+        "description": "Users want to export their data as CSV files. Add download endpoint for all data tables.",
+        "status": "open",
+        "assignee": "Carol",
+        "priority": "low",
+        "created_at": "2024-02-08"
+    },
+    {
+        "id": "MEET-124",
+        "title": "Implement caching layer",
+        "description": "Frequently accessed data is fetched from DB on every request. Add Redis caching.",
+        "status": "in-progress",
+        "assignee": "Dave",
+        "priority": "high",
+        "created_at": "2024-02-09"
+    },
+    {
+        "id": "MEET-125",
+        "title": "Fix responsive design on mobile",
+        "description": "Dashboard is not usable on mobile screens. Fix layout and touch interactions.",
+        "status": "open",
+        "assignee": "Eve",
+        "priority": "medium",
+        "created_at": "2024-02-10"
+    },
+    {
+        "id": "MEET-126",
+        "title": "Add two-factor authentication",
+        "description": "Account security needs improvement. Implement TOTP-based two-factor authentication.",
+        "status": "open",
+        "assignee": "Alice",
+        "priority": "high",
+        "created_at": "2024-02-11"
+    },
+    {
+        "id": "MEET-127",
+        "title": "Resolve flaky test suite",
+        "description": "About 20% of tests fail randomly in CI. Investigate and fix timing and isolation issues.",
+        "status": "in-progress",
+        "assignee": "Bob",
+        "priority": "medium",
+        "created_at": "2024-02-12"
+    },
+    {
+        "id": "MEET-128",
+        "title": "Add pagination to list endpoints",
+        "description": "API returns all records at once causing slow responses. Add cursor-based pagination.",
+        "status": "open",
+        "assignee": "Carol",
+        "priority": "medium",
+        "created_at": "2024-02-13"
+    },
+    {
+        "id": "MEET-129",
+        "title": "Set up log aggregation",
+        "description": "Logs are scattered across services. Set up centralised logging with ELK stack.",
+        "status": "open",
+        "assignee": "Dave",
+        "priority": "medium",
+        "created_at": "2024-02-14"
+    },
+    {
+        "id": "MEET-130",
+        "title": "Fix file upload size limit",
+        "description": "Large file uploads are being rejected silently. Fix server and nginx upload size limits.",
+        "status": "done",
+        "assignee": "Eve",
+        "priority": "medium",
+        "created_at": "2024-02-15"
+    },
+    {
+        "id": "MEET-131",
+        "title": "Add dark mode to dashboard",
+        "description": "Users have requested a dark mode option. Implement theme toggle using CSS variables.",
+        "status": "open",
+        "assignee": "Alice",
+        "priority": "low",
+        "created_at": "2024-02-16"
+    },
+    {
+        "id": "MEET-132",
+        "title": "Fix race condition in order processing",
+        "description": "Concurrent order submissions sometimes result in duplicate charges. Add distributed lock.",
+        "status": "in-progress",
+        "assignee": "Bob",
+        "priority": "high",
+        "created_at": "2024-02-17"
+    },
+    {
+        "id": "MEET-133",
+        "title": "Add webhook support",
+        "description": "Partners need to receive real-time event notifications. Implement outbound webhooks.",
+        "status": "open",
+        "assignee": "Carol",
+        "priority": "medium",
+        "created_at": "2024-02-18"
+    },
+    {
+        "id": "MEET-134",
+        "title": "Optimise image loading",
+        "description": "Product images load slowly. Implement WebP conversion and CDN delivery.",
+        "status": "open",
+        "assignee": "Dave",
+        "priority": "low",
+        "created_at": "2024-02-19"
+    },
+    {
+        "id": "MEET-135",
+        "title": "Fix broken OAuth integration",
+        "description": "Sign in with Google is returning 500 errors. OAuth callback URL is misconfigured.",
+        "status": "done",
+        "assignee": "Eve",
+        "priority": "high",
+        "created_at": "2024-02-20"
+    },
+    {
+        "id": "MEET-136",
+        "title": "Add audit logging",
+        "description": "No record of who changed what. Implement audit trail for all data mutations.",
+        "status": "open",
+        "assignee": "Alice",
+        "priority": "medium",
+        "created_at": "2024-02-21"
+    },
+    {
+        "id": "MEET-137",
+        "title": "Refactor API error handling",
+        "description": "Error responses are inconsistent across endpoints. Standardise error format and codes.",
+        "status": "in-progress",
+        "assignee": "Bob",
+        "priority": "medium",
+        "created_at": "2024-02-22"
+    },
+    {
+        "id": "MEET-138",
+        "title": "Add end-to-end tests",
+        "description": "No E2E test coverage exists. Add Playwright tests for critical user journeys.",
+        "status": "open",
+        "assignee": "Carol",
+        "priority": "medium",
+        "created_at": "2024-02-23"
+    },
+    {
+        "id": "MEET-139",
+        "title": "Fix SSL certificate renewal",
+        "description": "SSL certificate expires soon and auto-renewal is not configured. Set up certbot.",
+        "status": "done",
+        "assignee": "Dave",
+        "priority": "high",
+        "created_at": "2024-02-24"
+    },
+    {
+        "id": "MEET-140",
+        "title": "Add user activity dashboard",
+        "description": "Admins need visibility into user activity. Build analytics dashboard with charts.",
+        "status": "open",
+        "assignee": "Eve",
+        "priority": "low",
+        "created_at": "2024-02-25"
+    },
+    {
+        "id": "MEET-141",
+        "title": "Implement soft delete for records",
+        "description": "Deleted records are permanently removed. Implement soft delete with restore capability.",
+        "status": "open",
+        "assignee": "Alice",
+        "priority": "medium",
+        "created_at": "2024-03-01"
+    },
+    {
+        "id": "MEET-142",
+        "title": "Fix timezone handling",
+        "description": "Dates display incorrectly for users in different timezones. Standardise to UTC storage.",
+        "status": "in-progress",
+        "assignee": "Bob",
+        "priority": "medium",
+        "created_at": "2024-03-02"
+    },
+    {
+        "id": "MEET-143",
+        "title": "Add keyboard shortcuts",
+        "description": "Power users want keyboard shortcuts for common actions. Implement shortcut system.",
+        "status": "open",
+        "assignee": "Carol",
+        "priority": "low",
+        "created_at": "2024-03-03"
+    },
+    {
+        "id": "MEET-144",
+        "title": "Fix broken data migration script",
+        "description": "The v2 migration script fails on large datasets. Fix memory usage and add checkpointing.",
+        "status": "open",
+        "assignee": "Dave",
+        "priority": "high",
+        "created_at": "2024-03-04"
+    },
+    {
+        "id": "MEET-145",
+        "title": "Add multi-language support",
+        "description": "International users need localisation. Add i18n framework and translate to 3 languages.",
+        "status": "open",
+        "assignee": "Eve",
+        "priority": "low",
+        "created_at": "2024-03-05"
+    },
+    {
+        "id": "MEET-146",
+        "title": "Resolve dependency conflict in backend",
+        "description": "Two packages require conflicting versions of a shared library causing import errors.",
+        "status": "done",
+        "assignee": "Alice",
+        "priority": "high",
+        "created_at": "2024-03-06"
+    },
+    {
+        "id": "MEET-147",
+        "title": "Add backup and restore system",
+        "description": "No automated backup exists for the database. Set up daily backups with restore testing.",
+        "status": "open",
+        "assignee": "Bob",
+        "priority": "high",
+        "created_at": "2024-03-07"
+    },
+    {
+        "id": "MEET-148",
+        "title": "Fix navigation breadcrumbs",
+        "description": "Breadcrumb trail shows incorrect paths on nested pages. Fix routing logic.",
+        "status": "done",
+        "assignee": "Carol",
+        "priority": "low",
+        "created_at": "2024-03-08"
+    },
+    {
+        "id": "MEET-149",
+        "title": "Implement feature flags system",
+        "description": "Need ability to toggle features without deployment. Set up feature flag service.",
+        "status": "open",
+        "assignee": "Dave",
+        "priority": "medium",
+        "created_at": "2024-03-09"
+    },
+    {
+        "id": "MEET-150",
+        "title": "Add performance profiling",
+        "description": "Application performance degrades under load. Set up profiling to identify bottlenecks.",
+        "status": "open",
+        "assignee": "Eve",
+        "priority": "medium",
+        "created_at": "2024-03-10"
+    }
+]
