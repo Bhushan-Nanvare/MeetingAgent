@@ -2,12 +2,23 @@ import asyncio
 import logging
 import httpx
 from google import genai
+from google.genai import types
 from config import settings
 
 logger = logging.getLogger(__name__)
 
+GEMINI_BATCH_LIMIT = 100
+
 
 class EmbedProvider:
+    """Embeds text with the configured provider only.
+
+    There is deliberately no Gemini -> Ollama fallback here: vectors from two
+    different models are not comparable, and mixing them in one Qdrant
+    collection would make duplicate detection silently wrong. If you change
+    EMBED_PROVIDER, re-ingest the ticket corpus.
+    """
+
     def __init__(self):
         if settings.GEMINI_API_KEY:
             self._client = genai.Client(api_key=settings.GEMINI_API_KEY)
@@ -15,41 +26,31 @@ class EmbedProvider:
             self._client = None
 
     async def embed_one(self, text: str) -> list[float]:
-        if settings.EMBED_PROVIDER == "gemini" and self._client:
-            try:
-                return await self._gemini_embed(text.strip())
-            except Exception as e:
-                logger.warning(
-                    f"Gemini embed failed ({e}), falling back to Ollama"
-                )
-        return await self._ollama_embed(text.strip())
+        return (await self.embed_batch([text]))[0]
 
     async def embed_batch(self, texts: list[str]) -> list[list[float]]:
         if not texts:
             return []
-        results = await asyncio.gather(
-            *[self.embed_one(t) for t in texts],
-            return_exceptions=True,
-        )
-        vectors = []
-        for i, r in enumerate(results):
-            if isinstance(r, Exception):
-                logger.error(f"Embedding failed for text[{i}]: {r}")
-                vectors.append([0.0] * settings.EMBEDDING_SIZE)
-            else:
-                vectors.append(r)
-        return vectors
+        texts = [t.strip() for t in texts]
+        if settings.EMBED_PROVIDER == "gemini":
+            if not self._client:
+                raise RuntimeError("EMBED_PROVIDER is gemini but GEMINI_API_KEY is not set")
+            vectors = []
+            for i in range(0, len(texts), GEMINI_BATCH_LIMIT):
+                vectors.extend(await self._gemini_embed(texts[i:i + GEMINI_BATCH_LIMIT]))
+            return vectors
+        return list(await asyncio.gather(*[self._ollama_embed(t) for t in texts]))
 
-    async def _gemini_embed(self, text: str) -> list[float]:
-        loop = asyncio.get_event_loop()
-        result = await loop.run_in_executor(
-            None,
-            lambda: self._client.models.embed_content(
-                model=settings.EMBEDDING_MODEL,
-                contents=text,
+    async def _gemini_embed(self, texts: list[str]) -> list[list[float]]:
+        result = await self._client.aio.models.embed_content(
+            model=settings.EMBEDDING_MODEL,
+            contents=texts,
+            config=types.EmbedContentConfig(
+                task_type="SEMANTIC_SIMILARITY",
+                output_dimensionality=settings.EMBEDDING_SIZE,
             ),
         )
-        return result.embeddings[0].values
+        return [e.values for e in result.embeddings]
 
     async def _ollama_embed(self, text: str) -> list[float]:
         async with httpx.AsyncClient(timeout=60.0) as client:
