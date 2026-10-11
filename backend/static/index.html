@@ -1,0 +1,593 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MeetingAgent</title>
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --card: #ffffff;
+    --text: #1b1f24;
+    --muted: #5c6672;
+    --line: #dfe3e8;
+    --accent: #2f6feb;
+    --ok: #1a7f4b;
+    --ok-bg: #e7f5ed;
+    --no: #b23c3c;
+    --no-bg: #fbeceb;
+    --high: #b23c3c;
+    --medium: #9a6700;
+    --low: #4a5560;
+    --shadow: 0 1px 2px rgba(20, 24, 31, .06), 0 4px 12px rgba(20, 24, 31, .04);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14171c;
+      --card: #1c2127;
+      --text: #e7eaee;
+      --muted: #9aa5b1;
+      --line: #2c333b;
+      --accent: #6f9bff;
+      --ok: #5fd39b;
+      --ok-bg: #16311f;
+      --no: #ff9a92;
+      --no-bg: #341d1c;
+      --high: #ff9a92;
+      --medium: #e5b567;
+      --low: #9aa5b1;
+      --shadow: none;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 32px 20px 80px; }
+  header h1 { font-size: 22px; margin: 0 0 4px; }
+  header p { margin: 0 0 24px; color: var(--muted); }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 18px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+  }
+  h2 { font-size: 15px; margin: 0 0 12px; letter-spacing: .01em; }
+  label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 5px; }
+  input, textarea, select, button { font: inherit; color: inherit; }
+  input[type=text], input[type=date], textarea, select {
+    width: 100%;
+    padding: 8px 10px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+  }
+  textarea { resize: vertical; }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .row > div { flex: 1 1 200px; }
+  .tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+  .tab {
+    padding: 6px 12px; border-radius: 999px; cursor: pointer;
+    border: 1px solid var(--line); background: transparent; color: var(--muted);
+  }
+  .tab[aria-selected=true] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .drop {
+    border: 1.5px dashed var(--line); border-radius: 9px; padding: 22px;
+    text-align: center; color: var(--muted); cursor: pointer;
+  }
+  .drop.over { border-color: var(--accent); color: var(--accent); }
+  .btn {
+    padding: 9px 16px; border-radius: 7px; border: 1px solid var(--line);
+    background: var(--card); cursor: pointer;
+  }
+  .btn:hover:not(:disabled) { border-color: var(--accent); }
+  .btn:disabled { opacity: .55; cursor: default; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .actions { display: flex; gap: 10px; align-items: center; margin-top: 14px; flex-wrap: wrap; }
+  .hint { color: var(--muted); font-size: 13px; }
+  .error { color: var(--no); background: var(--no-bg); border: 1px solid var(--no); }
+  .item { border: 1px solid var(--line); border-radius: 9px; padding: 14px; margin-bottom: 12px; }
+  .item.approved { border-color: var(--ok); background: var(--ok-bg); }
+  .item.rejected { border-color: var(--no); background: var(--no-bg); opacity: .72; }
+  .item.duplicate { border-color: var(--medium); }
+  .similar {
+    margin-top: 10px; padding: 10px 12px; border-radius: 8px;
+    background: var(--bg); border: 1px solid var(--line); font-size: 13px;
+  }
+  .similar strong { color: var(--medium); }
+  .similar a { color: var(--accent); }
+  .item .grid { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+  .item .grid > div { flex: 1 1 150px; }
+  .quote {
+    margin-top: 10px; padding-left: 10px; border-left: 2px solid var(--line);
+    color: var(--muted); font-size: 13px;
+  }
+  .pill { font-size: 12px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); }
+  .pill.high { color: var(--high); } .pill.medium { color: var(--medium); } .pill.low { color: var(--low); }
+  .counts { display: flex; gap: 14px; font-size: 13px; color: var(--muted); margin-bottom: 12px; }
+  .decision { display: flex; gap: 8px; margin-bottom: 8px; }
+  .icon-btn { border: none; background: none; color: var(--muted); cursor: pointer; padding: 0 6px; font-size: 18px; }
+  .icon-btn:hover { color: var(--no); }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>MeetingAgent</h1>
+    <p>Turn a meeting transcript into decisions and owned action items.</p>
+  </header>
+
+  <section class="card" id="input-card">
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" id="tab-file" aria-selected="true">Upload a file</button>
+      <button class="tab" role="tab" id="tab-text" aria-selected="false">Paste text</button>
+    </div>
+
+    <div id="pane-file">
+      <div class="drop" id="drop" tabindex="0" role="button">
+        <strong>Drop a transcript here</strong> or click to choose<br>
+        <span class="hint">.vtt, .srt, .txt or .md from Teams, Zoom or Meet (max 5 MB)</span>
+        <div id="file-name" class="hint" style="margin-top:8px"></div>
+      </div>
+      <input type="file" id="file" accept=".vtt,.srt,.txt,.md" hidden>
+    </div>
+
+    <div id="pane-text" hidden>
+      <label for="text">Transcript</label>
+      <textarea id="text" rows="8" placeholder="Alice: I will add rate limiting by Wednesday."></textarea>
+    </div>
+
+    <div class="row" style="margin-top:14px">
+      <div>
+        <label for="date">Meeting date <span class="hint">(turns "by Friday" into a real date)</span></label>
+        <input type="date" id="date">
+      </div>
+      <div>
+        <label for="attendees">Attendees <span class="hint">(comma separated)</span></label>
+        <input type="text" id="attendees" placeholder="Alice Fernandes, Bob Mehta">
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn primary" id="run">Extract notes</button>
+      <span class="hint" id="status" role="status" aria-live="polite"></span>
+    </div>
+  </section>
+
+  <section class="card error" id="error" hidden></section>
+
+  <section id="results" hidden>
+    <div class="card">
+      <h2>Summary</h2>
+      <textarea id="summary" rows="6"></textarea>
+    </div>
+
+    <div class="card">
+      <h2>Decisions</h2>
+      <div id="decisions"></div>
+      <button class="btn" id="add-decision" style="margin-top:6px">Add decision</button>
+    </div>
+
+    <div class="card">
+      <h2>Action items</h2>
+      <div class="counts" id="counts"></div>
+      <div id="items"></div>
+      <p class="hint" id="no-items" hidden>No action items were found in this transcript.</p>
+    </div>
+
+    <div class="card">
+      <h2>File tickets</h2>
+      <p class="hint">Approved items are created in the local tracker (mock Jira). Items that look like existing tickets are flagged first so you can skip them.</p>
+      <div class="actions">
+        <button class="btn primary" id="file-tickets">File approved items</button>
+        <span class="hint" id="file-status" role="status" aria-live="polite"></span>
+      </div>
+      <div id="filed" class="hint" style="margin-top:10px"></div>
+    </div>
+
+    <div class="card">
+      <h2>Share</h2>
+      <p class="hint">Approved and undecided items are included; rejected ones are left out.</p>
+      <div class="actions">
+        <button class="btn primary" id="copy-md">Copy minutes</button>
+        <button class="btn" id="copy-json">Copy approved items as JSON</button>
+        <button class="btn" id="clear">Start over</button>
+        <span class="hint" id="copy-status" role="status" aria-live="polite"></span>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+const STORE_KEY = "meetingagent.session";
+const $ = (id) => document.getElementById(id);
+let meeting = null;
+
+/* ---------- input mode ---------- */
+function selectTab(which) {
+  const isFile = which === "file";
+  $("tab-file").setAttribute("aria-selected", String(isFile));
+  $("tab-text").setAttribute("aria-selected", String(!isFile));
+  $("pane-file").hidden = !isFile;
+  $("pane-text").hidden = isFile;
+}
+$("tab-file").onclick = () => selectTab("file");
+$("tab-text").onclick = () => selectTab("text");
+
+$("drop").onclick = () => $("file").click();
+$("drop").onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $("file").click(); } };
+$("file").onchange = () => { $("file-name").textContent = $("file").files[0]?.name || ""; };
+["dragenter", "dragover"].forEach((ev) =>
+  $("drop").addEventListener(ev, (e) => { e.preventDefault(); $("drop").classList.add("over"); }));
+["dragleave", "drop"].forEach((ev) =>
+  $("drop").addEventListener(ev, (e) => { e.preventDefault(); $("drop").classList.remove("over"); }));
+$("drop").addEventListener("drop", (e) => {
+  const file = e.dataTransfer.files[0];
+  if (!file) return;
+  $("file").files = e.dataTransfer.files;
+  $("file-name").textContent = file.name;
+});
+
+/* ---------- extract ---------- */
+$("run").onclick = async () => {
+  const file = $("file").files[0];
+  const text = $("text").value.trim();
+  const usingFile = !$("pane-file").hidden;
+
+  if (usingFile && !file) return showError("Choose a transcript file first.");
+  if (!usingFile && !text) return showError("Paste a transcript first.");
+
+  setBusy(true, "Reading the transcript, this usually takes 5 to 20 seconds…");
+  try {
+    const response = usingFile ? await postFile(file) : await postText(text);
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.detail || `Request failed (${response.status})`);
+    meeting = body;
+    render();
+    save();
+    showError(null);
+  } catch (e) {
+    showError(e.message);
+  } finally {
+    setBusy(false, "");
+  }
+};
+
+function formFields(form) {
+  if ($("date").value) form.append("meeting_date", $("date").value);
+  form.append("attendees", $("attendees").value);
+  return form;
+}
+function postFile(file) {
+  const form = new FormData();
+  form.append("file", file);
+  return fetch("/extract/file", { method: "POST", body: formFields(form) });
+}
+function postText(text) {
+  return fetch("/extract", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      transcript: text,
+      meeting_date: $("date").value || null,
+      attendees: attendeeList(),
+    }),
+  });
+}
+function attendeeList() {
+  return $("attendees").value.split(",").map((s) => s.trim()).filter(Boolean);
+}
+
+function setBusy(busy, message) {
+  $("run").disabled = busy;
+  $("status").textContent = message;
+}
+function showError(message) {
+  $("error").hidden = !message;
+  $("error").textContent = message || "";
+}
+
+/* ---------- render ---------- */
+function render() {
+  $("results").hidden = !meeting;
+  if (!meeting) return;
+
+  $("summary").value = meeting.summary || "";
+  $("summary").oninput = () => { meeting.summary = $("summary").value; save(); };
+
+  renderDecisions();
+  renderItems();
+  updateCounts();
+}
+
+function renderDecisions() {
+  const box = $("decisions");
+  box.textContent = "";
+  meeting.decisions.forEach((decision, index) => {
+    const row = document.createElement("div");
+    row.className = "decision";
+    const input = document.createElement("input");
+    input.type = "text";
+    input.value = decision;
+    input.oninput = () => { meeting.decisions[index] = input.value; save(); };
+    const remove = document.createElement("button");
+    remove.className = "icon-btn";
+    remove.textContent = "×";
+    remove.title = "Remove this decision";
+    remove.onclick = () => { meeting.decisions.splice(index, 1); renderDecisions(); save(); };
+    row.append(input, remove);
+    box.append(row);
+  });
+}
+$("add-decision").onclick = () => { meeting.decisions.push(""); renderDecisions(); save(); };
+
+function renderItems() {
+  const box = $("items");
+  box.textContent = "";
+  $("no-items").hidden = meeting.action_items.length > 0;
+
+  meeting.action_items.forEach((item) => {
+    const card = document.createElement("div");
+    card.className = itemClass(item);
+
+    const task = field("Task", "text", item.task, (value) => (item.task = value));
+    const owner = field("Owner", "text", item.owner, (value) => (item.owner = value));
+    owner.querySelector("input").setAttribute("list", "attendee-list");
+    const due = field("Due date", "date", item.due_date || "", (value) => (item.due_date = value || null));
+
+    const priorityWrap = document.createElement("div");
+    const priorityLabel = document.createElement("label");
+    priorityLabel.textContent = "Priority";
+    const priority = document.createElement("select");
+    ["high", "medium", "low"].forEach((level) => {
+      const option = document.createElement("option");
+      option.value = option.textContent = level;
+      option.selected = item.priority === level;
+      priority.append(option);
+    });
+    priority.onchange = () => { item.priority = priority.value; save(); };
+    priorityWrap.append(priorityLabel, priority);
+
+    const grid = document.createElement("div");
+    grid.className = "grid";
+    grid.append(owner, due, priorityWrap);
+
+    const buttons = document.createElement("div");
+    buttons.className = "actions";
+    buttons.append(
+      toggleButton("Approve", "approved", item, card),
+      toggleButton("Reject", "rejected", item, card),
+    );
+
+    card.append(task, grid, buttons);
+
+    if (item.similar_tickets && item.similar_tickets.length) {
+      const similar = document.createElement("div");
+      similar.className = "similar";
+      const matches = item.similar_tickets.map((ticket) => {
+        const label = `${ticket.id}: ${ticket.title} (${ticket.status || "unknown"}, ${Math.round(ticket.score * 100)}% match)`;
+        return ticket.id
+          ? `<a href="/tickets/${ticket.id}" target="_blank" rel="noopener">${label}</a>`
+          : label;
+      });
+      similar.innerHTML = `<strong>Looks like an existing ticket.</strong> ${matches.join("; ")}`;
+      card.append(similar);
+    }
+
+    if (item.jira_ticket_id) {
+      const filed = document.createElement("p");
+      filed.className = "quote";
+      filed.innerHTML = item.jira_url
+        ? `Filed as <a href="${item.jira_url}">${item.jira_ticket_id}</a>`
+        : `Filed as ${item.jira_ticket_id}`;
+      card.append(filed);
+    }
+
+    if (item.source_segment) {
+      const quote = document.createElement("p");
+      quote.className = "quote";
+      quote.textContent = `“${item.source_segment}”`;
+      card.append(quote);
+    }
+    box.append(card);
+  });
+}
+
+function field(labelText, type, value, onChange) {
+  const wrap = document.createElement("div");
+  const label = document.createElement("label");
+  label.textContent = labelText;
+  const input = document.createElement("input");
+  input.type = type;
+  input.value = value || "";
+  input.oninput = () => { onChange(input.value); save(); };
+  wrap.append(label, input);
+  return wrap;
+}
+
+function toggleButton(text, status, item, card) {
+  const button = document.createElement("button");
+  button.className = "btn";
+  button.textContent = text;
+  button.onclick = () => {
+    item.status = item.status === status ? (item.similar_tickets?.length ? "possible_duplicate" : "new") : status;
+    card.className = itemClass(item);
+    updateCounts();
+    save();
+  };
+  return button;
+}
+
+function itemClass(item) {
+  if (item.status === "approved") return "item approved";
+  if (item.status === "rejected") return "item rejected";
+  if (item.status === "possible_duplicate") return "item duplicate";
+  return "item";
+}
+
+function updateCounts() {
+  const counts = { approved: 0, rejected: 0, new: 0, possible_duplicate: 0 };
+  meeting.action_items.forEach((item) => (counts[item.status] = (counts[item.status] || 0) + 1));
+  $("counts").textContent =
+    `${counts.approved} approved · ${counts.new} undecided · ${counts.possible_duplicate} possible duplicates · ${counts.rejected} rejected`;
+}
+
+/* ---------- share ---------- */
+function toMarkdown() {
+  const date = $("date").value ? ` — ${$("date").value}` : "";
+  const lines = [`# Meeting notes${date}`, "", "## Summary", meeting.summary || "_none_", ""];
+
+  const decisions = meeting.decisions.filter((d) => d.trim());
+  lines.push("## Decisions");
+  lines.push(...(decisions.length ? decisions.map((d) => `- ${d}`) : ["_none_"]), "");
+
+  const kept = meeting.action_items.filter((item) => item.status !== "rejected");
+  lines.push("## Action items");
+  if (!kept.length) {
+    lines.push("_none_");
+  } else {
+    kept.forEach((item) => {
+      const bits = [item.owner || "Unassigned"];
+      if (item.due_date) bits.push(`due ${item.due_date}`);
+      bits.push(item.priority);
+      if (item.jira_ticket_id) bits.push(item.jira_ticket_id);
+      lines.push(`- [ ] ${item.task} — ${bits.join(", ")}`);
+    });
+  }
+  return lines.join("\n");
+}
+
+async function copy(text, label) {
+  try {
+    await navigator.clipboard.writeText(text);
+    $("copy-status").textContent = `${label} copied`;
+  } catch {
+    const area = document.createElement("textarea");
+    area.value = text;
+    document.body.append(area);
+    area.select();
+    document.execCommand("copy");
+    area.remove();
+    $("copy-status").textContent = `${label} copied`;
+  }
+  setTimeout(() => ($("copy-status").textContent = ""), 2500);
+}
+
+$("file-tickets").onclick = async () => {
+  const approved = meeting.action_items.filter((item) => item.status === "approved");
+  if (!approved.length) {
+    $("file-status").textContent = "Approve at least one item first";
+    return;
+  }
+  $("file-tickets").disabled = true;
+  $("file-status").textContent = "Creating tickets…";
+  try {
+    const response = await fetch("/dispatch", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        meeting_id: meeting.meeting_id,
+        summary: meeting.summary || "",
+        approved_items: approved,
+      }),
+    });
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.detail || `Request failed (${response.status})`);
+    const byId = Object.fromEntries((body.results || []).map((row) => [row.item_id, row]));
+    meeting.action_items.forEach((item) => {
+      const row = byId[item.id];
+      if (!row || row.status !== "success") return;
+      item.jira_ticket_id = row.jira_ticket_id;
+      item.jira_url = row.jira_url;
+    });
+    const failed = (body.results || []).filter((row) => row.status !== "success");
+    $("file-status").textContent = failed.length
+      ? `Created ${body.tickets_created}, ${failed.length} failed`
+      : `Created ${body.tickets_created} ticket${body.tickets_created === 1 ? "" : "s"}`;
+    $("filed").textContent = (body.results || [])
+      .map((row) => row.jira_ticket_id
+        ? `${row.jira_ticket_id} — ${row.task}`
+        : `${row.task}: ${(row.errors || []).join("; ")}`)
+      .join("\n");
+    renderItems();
+    updateCounts();
+    save();
+  } catch (e) {
+    $("file-status").textContent = e.message;
+  } finally {
+    $("file-tickets").disabled = false;
+  }
+};
+
+$("copy-md").onclick = () => copy(toMarkdown(), "Minutes");
+$("copy-json").onclick = () => {
+  const approved = meeting.action_items.filter((item) => item.status === "approved");
+  if (!approved.length) {
+    $("copy-status").textContent = "Approve at least one item first";
+    return;
+  }
+  copy(JSON.stringify({ meeting_id: meeting.meeting_id, approved_items: approved }, null, 2), "JSON");
+};
+$("clear").onclick = () => {
+  meeting = null;
+  localStorage.removeItem(STORE_KEY);
+  $("results").hidden = true;
+  $("file").value = "";
+  $("file-name").textContent = "";
+  $("text").value = "";
+  $("file-status").textContent = "";
+  $("filed").textContent = "";
+};
+
+/* ---------- keep work across refreshes ---------- */
+function save() {
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify({
+      meeting,
+      date: $("date").value,
+      attendees: $("attendees").value,
+    }));
+  } catch { /* private browsing, or storage is full */ }
+  refreshAttendeeList();
+}
+
+function refreshAttendeeList() {
+  let list = document.getElementById("attendee-list");
+  if (!list) {
+    list = document.createElement("datalist");
+    list.id = "attendee-list";
+    document.body.append(list);
+  }
+  list.textContent = "";
+  attendeeList().forEach((name) => {
+    const option = document.createElement("option");
+    option.value = name;
+    list.append(option);
+  });
+}
+
+function restore() {
+  refreshAttendeeList();
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
+    if (!saved) return;
+    $("date").value = saved.date || "";
+    $("attendees").value = saved.attendees || "";
+    refreshAttendeeList();
+    if (saved.meeting) {
+      meeting = saved.meeting;
+      render();
+      $("status").textContent = "Restored your last meeting";
+    }
+  } catch { /* ignore unreadable saved state */ }
+}
+restore();
+</script>
+</body>
+</html>

@@ -1,0 +1,67 @@
+WEBVTT
+
+NOTE Recording started 2026-09-15 10:02 IST
+
+1
+00:00:00.000 --> 00:00:07.120
+<v Alice Fernandes>Right, let's start. Two things today: the login problems and how we handle releases.</v>
+
+2
+00:00:07.400 --> 00:00:15.880
+<v Bob Mehta>Support sent over six tickets this week from people who cannot get back into their accounts after forgetting their password.</v>
+
+3
+00:00:16.100 --> 00:00:24.300
+<v Alice Fernandes>Yes, we still have no password reset flow. I will build the email based reset flow, I can have it ready by Friday.</v>
+
+4
+00:00:24.600 --> 00:00:31.050
+<v Carol D'Souza>Careful, I think something like that was already filed a while back. Worth checking before you open a new ticket.</v>
+
+5
+00:00:31.400 --> 00:00:39.900
+<v Bob Mehta>Separate thing, the login endpoint has no rate limiting at all. Somebody hit it two thousand times last night.</v>
+
+6
+00:00:40.200 --> 00:00:47.600
+<v Alice Fernandes>That is urgent, it is open to anyone. Bob, can you add rate limiting on that endpoint this week?</v>
+
+7
+00:00:47.900 --> 00:00:52.400
+<v Bob Mehta>Sure, I will do it by Wednesday.</v>
+
+8
+00:00:52.800 --> 00:01:02.200
+<v Carol D'Souza>The reports page is also timing out. Three endpoints take over ten seconds because of missing indexes. I will look into the slow queries.</v>
+
+9
+00:01:02.500 --> 00:01:09.400
+<v Dave Patil>At some point it would be nice to have dark mode as well. Not urgent, just something people keep asking about.</v>
+
+10
+00:01:09.700 --> 00:01:14.100
+<v Alice Fernandes>Let's park dark mode for now, nobody has time for it this sprint.</v>
+
+11
+00:01:14.500 --> 00:01:23.800
+<v Eve Sharma>On releases, shipping whenever we feel like it is not working. I suggest we release every Thursday afternoon and freeze changes on Thursday morning.</v>
+
+12
+00:01:24.100 --> 00:01:29.700
+<v Alice Fernandes>Agreed, weekly release on Thursday it is. Everyone okay with that?</v>
+
+13
+00:01:30.000 --> 00:01:33.200
+<v Carol D'Souza>Works for me.</v>
+
+14
+00:01:33.500 --> 00:01:41.900
+<v Dave Patil>Also we decided last month to move the database to Postgres, and that migration is still half done. I am on it, but it will take another two weeks.</v>
+
+15
+00:01:42.200 --> 00:01:50.600
+<v Eve Sharma>One more thing, the setup steps in our onboarding doc are out of date. The new joiner lost a full day on it. I will update the onboarding guide.</v>
+
+16
+00:01:50.900 --> 00:01:57.300
+<v Alice Fernandes>Thanks Eve. That is everything, let's pick this up again in next week's planning.</v>

@@ -9,3 +9,4 @@ qdrant_data/
 *.egg-info/
 .pytest_cache/
 htmlcov/
+data/local_tickets.json
