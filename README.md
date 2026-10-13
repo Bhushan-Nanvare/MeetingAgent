@@ -152,3 +152,5 @@ data/
   sample_meeting.vtt         sample transcript
   mock_tickets.json          sample tickets for duplicate detection
 ```
+
+NOT WORKING CURRENTLY 
