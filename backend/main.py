@@ -18,6 +18,7 @@ from models.schemas import (
 )
 from services.ticket_store import all_tickets, get_ticket
 from services.transcript_parser import parse_transcript
+from tools import get_tracker
 
 logging.basicConfig(level=settings.LOG_LEVEL)
 logger = logging.getLogger(__name__)
@@ -57,8 +58,17 @@ async def health():
         "llm_model": settings.LLM_MODEL,
         "gemini_key_set": bool(settings.GEMINI_API_KEY),
         "mock_integrations": settings.MOCK_INTEGRATIONS,
+        "tracker": _tracker_name(),
         "ticket_count": len(all_tickets()),
     }
+
+
+def _tracker_name() -> str:
+    try:
+        return get_tracker().name
+    except Exception as e:
+        logger.warning(f"Tracker unavailable: {e}")
+        return "unconfigured"
 
 
 @app.post("/extract", response_model=ExtractionResult)

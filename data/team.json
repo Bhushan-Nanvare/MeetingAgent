@@ -1,0 +1,22 @@
+{
+  "Alice Fernandes": {
+    "email": "alice@example.com",
+    "jira_account_id": ""
+  },
+  "Bob Mehta": {
+    "email": "bob@example.com",
+    "jira_account_id": ""
+  },
+  "Carol D'Souza": {
+    "email": "carol@example.com",
+    "jira_account_id": ""
+  },
+  "Dave Patil": {
+    "email": "dave@example.com",
+    "jira_account_id": ""
+  },
+  "Eve Sharma": {
+    "email": "eve@example.com",
+    "jira_account_id": ""
+  }
+}

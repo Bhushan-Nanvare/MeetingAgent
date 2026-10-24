@@ -24,6 +24,14 @@ class Settings(BaseSettings):
     QDRANT_COLLECTION: str = "meeting_corpus"
     DEDUP_THRESHOLD: float = 0.78
     MOCK_INTEGRATIONS: bool = True
+    TRACKER_PROVIDER: str = "local"
+    TEAM_ROSTER: str = "data/team.json"
+    JIRA_BASE_URL: str = ""
+    JIRA_EMAIL: str = ""
+    JIRA_API_TOKEN: str = ""
+    JIRA_PROJECT_KEY: str = ""
+    JIRA_ISSUE_TYPE: str = "Task"
+    JIRA_SET_PRIORITY: bool = True
     WHISPER_MODEL: str = "base"
     LOG_LEVEL: str = "INFO"
 

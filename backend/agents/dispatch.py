@@ -2,30 +2,34 @@
 
 from datetime import datetime, timezone
 
-from config import settings
 from models.schemas import ActionItem, DispatchResult
-from tools.jira import jira_tool
+from services.roster import roster
+from tools import get_tracker
 
 
 async def dispatch_items(items: list[ActionItem], meeting_id: str) -> list[DispatchResult]:
     now = datetime.now(timezone.utc).isoformat()
-    results: list[DispatchResult] = []
 
-    if not settings.MOCK_INTEGRATIONS:
+    try:
+        tracker = get_tracker()
+    except Exception as e:
         return [
             DispatchResult(
                 item_id=item.id,
                 task=item.task,
                 status="failed",
-                errors=["Live Jira is not configured. Set MOCK_INTEGRATIONS=true to file into the local tracker."],
+                errors=[str(e)],
                 dispatched_at=now,
             )
             for item in items
         ]
 
+    results: list[DispatchResult] = []
     for item in items:
         try:
-            created = await jira_tool.create_issue(item, meeting_id)
+            created = await tracker.create_issue(
+                item, meeting_id, roster.account_for(item.owner, tracker.name)
+            )
             item.jira_ticket_id = created["id"]
             item.jira_url = created["url"]
             item.status = "approved"
@@ -40,6 +44,7 @@ async def dispatch_items(items: list[ActionItem], meeting_id: str) -> list[Dispa
                 )
             )
         except Exception as e:
+            item.status = "failed"
             results.append(
                 DispatchResult(
                     item_id=item.id,
