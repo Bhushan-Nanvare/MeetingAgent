@@ -183,7 +183,7 @@
 
     <div class="card">
       <h2>File tickets</h2>
-      <p class="hint">Approved items are created in the local tracker (mock Jira). Items that look like existing tickets are flagged first so you can skip them.</p>
+      <p class="hint" id="tracker-hint">Items that look like existing tickets are flagged first so you can skip them.</p>
       <div class="actions">
         <button class="btn primary" id="file-tickets">File approved items</button>
         <span class="hint" id="file-status" role="status" aria-live="polite"></span>
@@ -587,7 +587,22 @@ function restore() {
     }
   } catch { /* ignore unreadable saved state */ }
 }
+
+async function showTracker() {
+  const where = {
+    jira: "Approved items are created in Jira.",
+    local: "Approved items are created in the local tracker (data/local_tickets.json).",
+    unconfigured: "No tracker is configured, so filing will fail. Check the JIRA_ settings in .env.",
+  };
+  try {
+    const health = await (await fetch("/health")).json();
+    $("tracker-hint").textContent =
+      `${where[health.tracker] || ""} ${$("tracker-hint").textContent}`.trim();
+  } catch { /* leave the default hint */ }
+}
+
 restore();
+showTracker();
 </script>
 </body>
 </html>

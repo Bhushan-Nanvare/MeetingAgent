@@ -24,7 +24,7 @@ Transcript (.vtt / .srt / .txt from Teams, Zoom or Meet)
 | Phase | What it does | State |
 | --- | --- | --- |
 | 1. Minutes | Transcript in, summary + decisions + action items out, with a review page | Done |
-| 2. Tickets | Approve items and create them in the local tracker (mock Jira) | Done |
+| 2. Tickets | Approve items and create them in Jira, or in a local tracker for demos | Done |
 | 3. Duplicates | Flag action items that match existing tickets (word overlap) | Done |
 | 4. Follow-up | Open items from last time, search past decisions | Planned |
 | 5. Polish | Live Jira/Qdrant embeddings, Docker, CI, deployment | Planned |
@@ -112,8 +112,34 @@ curl -X POST http://localhost:8000/dispatch \
   -d '{"meeting_id": "0f1c...", "approved_items": [{"id": "8a2e...", "task": "Write the on-call rota", "owner": "Carol", "priority": "medium", "status": "approved"}]}'
 ```
 
-`GET /tickets` lists the sample corpus plus anything you filed. Live Jira is not
-connected yet; keep `MOCK_INTEGRATIONS=true`.
+`GET /tickets` lists the sample corpus plus anything filed locally.
+
+### Filing into real Jira
+
+With `MOCK_INTEGRATIONS=true` (the default) everything is written to
+`data/local_tickets.json`, which is handy for demos. To use a real Jira Cloud project:
+
+1. Create an API token at https://id.atlassian.com/manage-profile/security/api-tokens
+2. In `.env` set `MOCK_INTEGRATIONS=false`, `TRACKER_PROVIDER=jira`, and fill in
+   `JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN` and `JIRA_PROJECT_KEY`
+3. If your project's create screen has no priority field, set `JIRA_SET_PRIORITY=false`
+
+`GET /health` reports which tracker is active.
+
+### Assigning tickets to teammates
+
+`data/team.json` maps the names people use in meetings to tracker accounts:
+
+```json
+{
+  "Bob Mehta": { "email": "bob@example.com", "jira_account_id": "5f8a1b2c3d4e5f6a7b8c9d0e" }
+}
+```
+
+Find an account id in Jira under Profile, or via
+`GET /rest/api/3/user/search?query=bob@example.com`. Names match on the full name or the
+first name, so "Bob" in a transcript finds "Bob Mehta". Anyone missing from the file is
+left unassigned rather than failing.
 
 ## Tests
 
@@ -140,9 +166,12 @@ backend/
   config.py                  settings, read from .env
   agents/extraction.py       transcript -> summary, decisions, action items
   agents/dedup.py            action items vs existing tickets
-  agents/dispatch.py         approved items -> local tracker tickets
+  agents/dispatch.py         approved items -> tracker tickets
+  tools/jira.py              Jira Cloud provider
+  tools/local.py             local JSON tracker used in mock mode
   services/transcript_parser.py  .vtt / .srt / .txt -> clean text
   services/ticket_store.py   sample tickets + locally filed tickets
+  services/roster.py         meeting names -> tracker accounts
   services/transcriber.py    Whisper audio transcription (not wired up yet)
   services/job_store.py      job tracking for long running uploads
   providers/                 Gemini and Ollama clients
@@ -151,6 +180,7 @@ backend/
 data/
   sample_meeting.vtt         sample transcript
   mock_tickets.json          sample tickets for duplicate detection
+  team.json                  roster: names -> tracker accounts
 ```
 
 NOT WORKING CURRENTLY 
