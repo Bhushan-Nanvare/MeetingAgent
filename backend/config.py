@@ -20,9 +20,12 @@ class Settings(BaseSettings):
     LLM_FALLBACK_MODELS: str = "gemini-flash-lite-latest"
     EMBEDDING_MODEL: str = "gemini-embedding-001"
     EMBEDDING_SIZE: int = 768
-    QDRANT_URL: str = "http://localhost:6333"
+    QDRANT_URL: str = ""
+    QDRANT_PATH: str = "data/qdrant"
     QDRANT_COLLECTION: str = "meeting_corpus"
     DEDUP_THRESHOLD: float = 0.78
+    SEMANTIC_DEDUP: bool = True
+    DATABASE_PATH: str = "data/meetingagent.db"
     MOCK_INTEGRATIONS: bool = True
     TRACKER_PROVIDER: str = "local"
     TEAM_ROSTER: str = "data/team.json"

@@ -113,6 +113,15 @@
   .decision { display: flex; gap: 8px; margin-bottom: 8px; }
   .icon-btn { border: none; background: none; color: var(--muted); cursor: pointer; padding: 0 6px; font-size: 18px; }
   .icon-btn:hover { color: var(--no); }
+  .list-row {
+    display: flex; gap: 12px; align-items: flex-start; justify-content: space-between;
+    padding: 9px 0; border-bottom: 1px solid var(--line);
+  }
+  .list-row:last-child { border-bottom: none; }
+  .list-row .meta { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .list-row .meta.overdue { color: var(--no); }
+  .list-row .btn { padding: 5px 10px; font-size: 13px; white-space: nowrap; }
+  h3 { font-size: 13px; color: var(--muted); font-weight: 600; }
   [hidden] { display: none !important; }
 </style>
 </head>
@@ -122,6 +131,11 @@
     <h1>MeetingAgent</h1>
     <p>Turn a meeting transcript into decisions and owned action items.</p>
   </header>
+
+  <section class="card" id="followup-card" hidden>
+    <h2>Still open from earlier meetings</h2>
+    <div id="followup"></div>
+  </section>
 
   <section class="card" id="input-card">
     <div class="tabs" role="tablist">
@@ -144,6 +158,10 @@
     </div>
 
     <div class="row" style="margin-top:14px">
+      <div>
+        <label for="title">Meeting name</label>
+        <input type="text" id="title" placeholder="Sprint planning">
+      </div>
       <div>
         <label for="date">Meeting date <span class="hint">(turns "by Friday" into a real date)</span></label>
         <input type="date" id="date">
@@ -186,6 +204,7 @@
       <p class="hint" id="tracker-hint">Items that look like existing tickets are flagged first so you can skip them.</p>
       <div class="actions">
         <button class="btn primary" id="file-tickets">File approved items</button>
+        <button class="btn" id="index-corpus" title="Embed all tickets so duplicate detection matches on meaning">Improve duplicate detection</button>
         <span class="hint" id="file-status" role="status" aria-live="polite"></span>
       </div>
       <div id="filed" class="hint" style="margin-top:10px"></div>
@@ -201,6 +220,15 @@
         <span class="hint" id="copy-status" role="status" aria-live="polite"></span>
       </div>
     </div>
+  </section>
+
+  <section class="card" id="history-card">
+    <h2>History</h2>
+    <label for="q">Search past decisions, tasks and summaries</label>
+    <input type="text" id="q" placeholder="postgres, onboarding, Carol">
+    <div id="search-results" style="margin-top:10px"></div>
+    <h3 style="margin:18px 0 6px">Recent meetings</h3>
+    <div id="meetings"></div>
   </section>
 </div>
 
@@ -252,6 +280,8 @@ $("run").onclick = async () => {
     render();
     save();
     showError(null);
+    loadFollowup();
+    loadMeetings();
   } catch (e) {
     showError(e.message);
   } finally {
@@ -262,6 +292,7 @@ $("run").onclick = async () => {
 function formFields(form) {
   if ($("date").value) form.append("meeting_date", $("date").value);
   form.append("attendees", $("attendees").value);
+  form.append("title", $("title").value);
   return form;
 }
 function postFile(file) {
@@ -277,6 +308,7 @@ function postText(text) {
       transcript: text,
       meeting_date: $("date").value || null,
       attendees: attendeeList(),
+      title: $("title").value,
     }),
   });
 }
@@ -518,6 +550,7 @@ $("file-tickets").onclick = async () => {
     renderItems();
     updateCounts();
     save();
+    loadMeetings();
   } catch (e) {
     $("file-status").textContent = e.message;
   } finally {
@@ -552,6 +585,7 @@ function save() {
       meeting,
       date: $("date").value,
       attendees: $("attendees").value,
+      title: $("title").value,
     }));
   } catch { /* private browsing, or storage is full */ }
   refreshAttendeeList();
@@ -579,6 +613,7 @@ function restore() {
     if (!saved) return;
     $("date").value = saved.date || "";
     $("attendees").value = saved.attendees || "";
+    $("title").value = saved.title || "";
     refreshAttendeeList();
     if (saved.meeting) {
       meeting = saved.meeting;
@@ -587,6 +622,22 @@ function restore() {
     }
   } catch { /* ignore unreadable saved state */ }
 }
+
+$("index-corpus").onclick = async () => {
+  $("index-corpus").disabled = true;
+  $("file-status").textContent = "Indexing tickets…";
+  try {
+    const response = await fetch("/corpus/index", { method: "POST" });
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.detail || `Request failed (${response.status})`);
+    $("file-status").textContent = `Indexed ${body.indexed} tickets`;
+    showTracker();
+  } catch (e) {
+    $("file-status").textContent = e.message;
+  } finally {
+    $("index-corpus").disabled = false;
+  }
+};
 
 async function showTracker() {
   const where = {
@@ -601,8 +652,144 @@ async function showTracker() {
   } catch { /* leave the default hint */ }
 }
 
+/* ---------- follow-up, history and search ---------- */
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (character) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[character]));
+}
+
+function listRow(title, meta, overdue = false) {
+  const row = document.createElement("div");
+  row.className = "list-row";
+  const left = document.createElement("div");
+  left.innerHTML = `<div>${escapeHtml(title)}</div>` +
+    `<div class="meta${overdue ? " overdue" : ""}">${escapeHtml(meta)}</div>`;
+  row.append(left);
+  return row;
+}
+
+async function loadFollowup() {
+  try {
+    const query = meeting?.meeting_id
+      ? `?exclude_meeting=${encodeURIComponent(meeting.meeting_id)}`
+      : "";
+    const items = await (await fetch(`/followup${query}`)).json();
+    const box = $("followup");
+    box.textContent = "";
+    $("followup-card").hidden = !items.length;
+
+    items.forEach((item) => {
+      const bits = [item.owner];
+      if (item.due_date) bits.push(`due ${item.due_date}`);
+      bits.push(item.priority, `${item.meeting_title} · ${item.days_open} days ago`);
+      if (item.ticket_id) bits.push(item.ticket_id);
+
+      const row = listRow(item.task, bits.join(" · "), item.overdue);
+      const done = document.createElement("button");
+      done.className = "btn";
+      done.textContent = "Mark done";
+      done.onclick = async () => {
+        done.disabled = true;
+        await fetch(`/items/${encodeURIComponent(item.id)}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "done" }),
+        });
+        loadFollowup();
+        loadMeetings();
+      };
+      row.append(done);
+      box.append(row);
+    });
+  } catch { /* server not reachable */ }
+}
+
+async function loadMeetings() {
+  try {
+    const meetings = await (await fetch("/meetings?limit=10")).json();
+    const box = $("meetings");
+    box.textContent = "";
+    if (!meetings.length) {
+      box.innerHTML = '<p class="hint">Nothing saved yet. Extract a transcript to start the history.</p>';
+      return;
+    }
+    meetings.forEach((stored) => {
+      const meta = `${stored.meeting_date || stored.created_at.slice(0, 10)} · ` +
+        `${stored.open_items} open of ${stored.total_items} items`;
+      const row = listRow(stored.title, meta);
+      const open = document.createElement("button");
+      open.className = "btn";
+      open.textContent = "Open";
+      open.onclick = () => openMeeting(stored.id);
+      row.append(open);
+      box.append(row);
+    });
+  } catch { /* server not reachable */ }
+}
+
+async function openMeeting(meetingId) {
+  const stored = await (await fetch(`/meetings/${encodeURIComponent(meetingId)}`)).json();
+  meeting = {
+    meeting_id: stored.id,
+    summary: stored.summary,
+    decisions: stored.decisions,
+    action_items: stored.action_items.map((item) => ({
+      ...item,
+      jira_ticket_id: item.ticket_id,
+      jira_url: item.ticket_url,
+      similar_tickets: [],
+    })),
+  };
+  $("title").value = stored.title || "";
+  $("date").value = stored.meeting_date || "";
+  $("attendees").value = (stored.attendees || []).join(", ");
+  render();
+  save();
+  $("status").textContent = `Opened "${stored.title}"`;
+  $("results").scrollIntoView({ behavior: "smooth" });
+}
+
+let searchTimer;
+$("q").oninput = () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(runSearch, 300);
+};
+
+async function runSearch() {
+  const query = $("q").value.trim();
+  const box = $("search-results");
+  box.textContent = "";
+  if (!query) return;
+
+  try {
+    const found = await (await fetch(`/search?q=${encodeURIComponent(query)}`)).json();
+    const sections = [
+      ["Decisions", found.decisions.map((row) => [row.text, `${row.meeting_title} · ${row.meeting_date || ""}`])],
+      ["Action items", found.action_items.map((row) => [row.task, `${row.owner} · ${row.status} · ${row.meeting_title}`])],
+      ["Meetings", found.meetings.map((row) => [row.title, row.summary.slice(0, 120)])],
+    ];
+
+    const hits = sections.filter(([, rows]) => rows.length);
+    if (!hits.length) {
+      box.innerHTML = '<p class="hint">Nothing found.</p>';
+      return;
+    }
+    hits.forEach(([heading, rows]) => {
+      const title = document.createElement("h3");
+      title.textContent = heading;
+      title.style.margin = "12px 0 4px";
+      box.append(title);
+      rows.forEach(([text, meta]) => box.append(listRow(text, meta)));
+    });
+  } catch {
+    box.innerHTML = '<p class="hint">Search failed.</p>';
+  }
+}
+
 restore();
 showTracker();
+loadFollowup();
+loadMeetings();
 </script>
 </body>
 </html>

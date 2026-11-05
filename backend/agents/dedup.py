@@ -1,16 +1,20 @@
 """Flag action items that already look like tickets in the tracker.
 
-This first version uses word overlap against the local ticket corpus so it
-runs in tests and on a laptop with no Qdrant or embedding calls. Semantic
-search can replace `_score` later without changing the API.
+Semantic search (embeddings in Qdrant) runs first when it is available, because it
+catches "users cannot sign in" against "fix login bug". Word overlap is the fallback,
+so the feature still works with no Qdrant, no API key and no network.
 """
 
 from __future__ import annotations
 
+import logging
 import re
 
+from config import settings
 from models.schemas import ActionItem, SimilarTicket
 from services.ticket_store import all_tickets
+
+logger = logging.getLogger(__name__)
 
 _WORD = re.compile(r"[a-z0-9]+")
 _STOP = {
@@ -64,12 +68,32 @@ def find_similar(task: str, tickets: list[dict] | None = None, limit: int = 3) -
     return matches
 
 
-def annotate_action_items(items: list[ActionItem]) -> list[ActionItem]:
+async def match_task(task: str, corpus: list[dict] | None = None) -> list[SimilarTicket]:
+    if settings.SEMANTIC_DEDUP:
+        try:
+            matches = await _semantic_matches(task)
+            if matches:
+                return matches
+        except Exception as e:
+            logger.warning(f"Semantic dedup unavailable ({e}), using word overlap")
+    return find_similar(task, corpus)
+
+
+async def _semantic_matches(task: str) -> list[SimilarTicket]:
+    from rag.client import collection_ready
+    from rag.search import search_similar
+
+    if not collection_ready():
+        return []
+    return await search_similar(task)
+
+
+async def annotate_action_items(items: list[ActionItem]) -> list[ActionItem]:
     """Attach similar tickets and mark likely duplicates. Approved/rejected stay as-is."""
     corpus = all_tickets()
     for item in items:
-        item.similar_tickets = find_similar(item.task, corpus)
-        if item.status in {"approved", "rejected", "failed"}:
+        item.similar_tickets = await match_task(item.task, corpus)
+        if item.status in {"approved", "rejected", "failed", "done"}:
             continue
         item.status = "possible_duplicate" if item.similar_tickets else "new"
     return items
