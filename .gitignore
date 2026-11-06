@@ -10,3 +10,6 @@ qdrant_data/
 .pytest_cache/
 htmlcov/
 data/local_tickets.json
+data/meetingagent.db
+data/qdrant/
+backend/evals/results/

@@ -1,0 +1,3 @@
+# Optional: audio transcription. Pulls in torch, so it is a large install and is
+# kept out of the Docker image and the default setup.
+openai-whisper

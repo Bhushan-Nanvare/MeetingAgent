@@ -1,0 +1,11 @@
+venv/
+**/__pycache__/
+**/*.pyc
+.git/
+.github/
+.pytest_cache/
+htmlcov/
+data/meetingagent.db
+data/local_tickets.json
+data/qdrant/
+*.md
