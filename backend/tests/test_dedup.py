@@ -1,9 +1,18 @@
-from agents.dedup import annotate_action_items, find_similar
-from models.schemas import ActionItem
+import pytest
+
+from agents import dedup
+from agents.dedup import annotate_action_items, find_similar, match_task
+from config import settings
+from models.schemas import ActionItem, SimilarTicket
 
 
 def _item(task: str, status: str = "new") -> ActionItem:
     return ActionItem(id="1", task=task, owner="Bob", priority="high", status=status)
+
+
+@pytest.fixture(autouse=True)
+def lexical_only(monkeypatch):
+    monkeypatch.setattr(settings, "SEMANTIC_DEDUP", False)
 
 
 def test_rate_limiting_matches_existing_ticket():
@@ -18,15 +27,53 @@ def test_unrelated_task_is_not_a_duplicate():
     assert find_similar("Order lunch for the offsite") == []
 
 
-def test_annotate_marks_duplicates_but_keeps_approved():
+async def test_annotate_marks_duplicates_but_keeps_approved():
     duplicate = _item("Add rate limiting to the API")
     approved = _item("Add rate limiting to the API", status="approved")
     fresh = _item("Order lunch for the offsite")
 
-    annotate_action_items([duplicate, approved, fresh])
+    await annotate_action_items([duplicate, approved, fresh])
 
     assert duplicate.status == "possible_duplicate"
     assert duplicate.similar_tickets[0].id == "MEET-110"
     assert approved.status == "approved"
     assert fresh.status == "new"
     assert fresh.similar_tickets == []
+
+
+async def test_semantic_matches_win_when_available(monkeypatch):
+    monkeypatch.setattr(settings, "SEMANTIC_DEDUP", True)
+    hit = SimilarTicket(id="MEET-999", title="Users cannot sign in", score=0.91)
+
+    async def _semantic(task):
+        return [hit]
+
+    monkeypatch.setattr(dedup, "_semantic_matches", _semantic)
+
+    assert await match_task("Fix the login bug") == [hit]
+
+
+async def test_word_overlap_is_used_when_semantic_search_fails(monkeypatch):
+    monkeypatch.setattr(settings, "SEMANTIC_DEDUP", True)
+
+    async def _broken(task):
+        raise RuntimeError("Qdrant is down")
+
+    monkeypatch.setattr(dedup, "_semantic_matches", _broken)
+
+    matches = await match_task("Add rate limiting to the login endpoint")
+
+    assert matches[0].id == "MEET-110"
+
+
+async def test_word_overlap_fills_in_when_semantic_finds_nothing(monkeypatch):
+    monkeypatch.setattr(settings, "SEMANTIC_DEDUP", True)
+
+    async def _empty(task):
+        return []
+
+    monkeypatch.setattr(dedup, "_semantic_matches", _empty)
+
+    matches = await match_task("Add rate limiting to the login endpoint")
+
+    assert matches[0].id == "MEET-110"
