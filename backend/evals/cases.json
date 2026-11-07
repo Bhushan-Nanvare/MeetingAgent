@@ -1,0 +1,60 @@
+[
+  {
+    "id": "sprint-planning",
+    "meeting_date": "2026-11-04",
+    "attendees": ["Alice Fernandes", "Bob Mehta", "Carol D'Souza", "Dave Patil"],
+    "transcript": "Alice: The reports page is timing out, three endpoints take over ten seconds.\nCarol: That is the missing indexes again. I will look at the slow queries this week, I can have it done by Friday.\nBob: Separate thing, the login endpoint still has no rate limiting. Someone hit it two thousand times last night.\nAlice: That is urgent. Bob, can you take that one?\nBob: Yes, I will add rate limiting by Thursday.\nDave: It would be nice to have dark mode at some point.\nAlice: Let's park dark mode, nobody has time this sprint.\nAlice: One more thing, we agreed we will release every Thursday afternoon from now on.",
+    "expected_items": [
+      { "keywords": ["slow", "quer"], "owner": "Carol D'Souza", "due_date": "2026-11-06" },
+      { "keywords": ["rate limiting"], "owner": "Bob Mehta", "due_date": "2026-11-05" }
+    ],
+    "expected_decisions": [["release", "thursday"]],
+    "forbidden_keywords": ["dark mode"]
+  },
+  {
+    "id": "unassigned-work",
+    "meeting_date": "2026-11-04",
+    "attendees": ["Alice Fernandes", "Eve Sharma"],
+    "transcript": "Eve: The onboarding doc is out of date, the new joiner lost a day on it.\nAlice: Someone needs to rewrite the setup steps, but let's decide who next week.\nEve: Agreed. Also the staging database is full, that is blocking the QA team right now.\nAlice: I will clear the staging database today.",
+    "expected_items": [
+      { "keywords": ["staging"], "owner": "Alice Fernandes", "due_date": "2026-11-04" },
+      { "keywords": ["onboarding"], "owner": "Unassigned", "due_date": null }
+    ],
+    "expected_decisions": [],
+    "forbidden_keywords": []
+  },
+  {
+    "id": "no-action-items",
+    "meeting_date": "2026-11-04",
+    "attendees": ["Alice Fernandes", "Bob Mehta"],
+    "transcript": "Alice: This is just a quick demo walkthrough, no decisions today.\nBob: The new dashboard looks good, the charts load fast.\nAlice: Agreed, nice work. Nothing else from me.\nBob: Same here, see you tomorrow.",
+    "expected_items": [],
+    "expected_decisions": [],
+    "forbidden_keywords": []
+  },
+  {
+    "id": "incident-review",
+    "meeting_date": "2026-11-04",
+    "attendees": ["Carol D'Souza", "Dave Patil", "Bob Mehta"],
+    "transcript": "Carol: Checkout was down for forty minutes yesterday because the payment worker ran out of memory.\nDave: I will add a memory alert on the worker, by Monday.\nBob: We also decided to roll back automatically if error rates go above five percent.\nCarol: Right, and someone should write the incident report. Dave, can you do it this week?\nDave: Sure, I will write the incident report by Friday.\nBob: Long term we might move the worker to a bigger instance, but that is not for now.",
+    "expected_items": [
+      { "keywords": ["memory", "alert"], "owner": "Dave Patil", "due_date": "2026-11-09" },
+      { "keywords": ["incident report"], "owner": "Dave Patil", "due_date": "2026-11-06" }
+    ],
+    "expected_decisions": [["roll back", "error"]],
+    "forbidden_keywords": ["bigger instance"]
+  },
+  {
+    "id": "hiring-sync",
+    "meeting_date": "2026-11-04",
+    "attendees": ["Alice Fernandes", "Eve Sharma", "Bob Mehta"],
+    "transcript": "Alice: We have four candidates for the backend role.\nEve: I will send the take home task to all four today.\nAlice: We decided to drop the whiteboard round, it was not telling us anything useful.\nBob: I can run the system design interviews next week.\nEve: I will also update the job description, it still mentions the old stack. Give me until Wednesday.",
+    "expected_items": [
+      { "keywords": ["take home"], "owner": "Eve Sharma", "due_date": "2026-11-04" },
+      { "keywords": ["system design"], "owner": "Bob Mehta", "due_date": null },
+      { "keywords": ["job description"], "owner": "Eve Sharma", "due_date": "2026-11-11" }
+    ],
+    "expected_decisions": [["whiteboard"]],
+    "forbidden_keywords": []
+  }
+]
